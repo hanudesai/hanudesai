@@ -19,7 +19,7 @@ pipeline {
     stages {
         stage('Checking Input Parameters') {
             steps {
-                cleanWs()
+                
                 sh """
                     if [[ "\$API" == "--PLEASE SELECT AN API--" ]]; then
                         exit 1;

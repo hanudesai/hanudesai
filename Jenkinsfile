@@ -94,7 +94,6 @@ pipeline {
                 sh """
                     echo "Running GET Request for TS"
                     deployApigeeProxy.getTargetServer("${env.ORGANIZATION}" ,  "${env.APIGEE_ENV}" ,  "test-htttpbin" ,  "${auth}" )
-                    deployApigeeProxy.createTargetServer( "${env.ORGANIZATION}" ,  "${env.APIGEE_ENV}" ,  "test-htttpbin" ,  "${auth}" )
                     
                 """
             }

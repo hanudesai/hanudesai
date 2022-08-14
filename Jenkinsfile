@@ -31,17 +31,17 @@ pipeline {
                 """
             }
         }
-        stage('Test connectivity') {
-            when {
-                expression { return params.dry_run == true }
-            }
-            steps{
-                sh """
-                    echo "curl https://apigee_Url"
+        // stage('Test connectivity') {
+        //     when {
+        //         expression { return params.dry_run == true }
+        //     }
+        //     steps{
+        //         sh """
+        //             echo "curl https://apigee_Url"
 
-                """
-            }
-        }
+        //         """
+        //     }
+        // }
         stage('Parse Environment Vars') {
             steps {
                 script {
@@ -50,8 +50,10 @@ pipeline {
                             env.URL_ENV = "https://apigee_Url";
                             env.CREDENTIALS_APIGEE_SECRET_ID = "APIGEE_DEV_SECRET_ID";
                             env.CREDENTIALS_APIGEE_CLIENT_ID = "APIGEE_DEV_CLIENT_ID";
-                            env.ORGANIZATION = "dev";
-                            env.WHICHBRANCH = "dev";
+                            env.ORGANIZATION = "cps-apg-hybrid";
+                            env.projectid = "cps-apg-hybrid"
+                            env.APIGEE_ENV = "default-dev"
+                            // env.WHICHBRANCH = "";
                             break;
                         case "UAT":
                             env.URL_ENV = "https://apigee_Url";
@@ -66,44 +68,44 @@ pipeline {
                 echo env.URL_ENV
             }
         }
-        stage('Authenticate') {
-            when {
-                expression { return params.dry_run == false }
-            }
-            steps {
-                withCredentials([
-                    string(credentialsId: env.CREDENTIALS_APIGEE_SECRET_ID, variable: 'APIGEE_SECRET_ID'), 
-                    string(credentialsId: env.CREDENTIALS_APIGEE_CLIENT_ID, variable: 'APIGEE_CLIENT_ID')]) {
+        // stage('Authenticate') {
+        //     when {
+        //         expression { return params.dry_run == false }
+        //     }
+        //     steps {
+        //         withCredentials([
+        //             string(credentialsId: env.CREDENTIALS_APIGEE_SECRET_ID, variable: 'APIGEE_SECRET_ID'), 
+        //             string(credentialsId: env.CREDENTIALS_APIGEE_CLIENT_ID, variable: 'APIGEE_CLIENT_ID')]) {
         
-			script {
-                        env.AUTH_KEY = sh(returnStdout: true, script: """curl --location -g --request POST '${env.URL_ENV}/apip/auth/v2/token' \\
-                        --header 'Content-Type: application/json' \\
-                        --data '{
-                            "client_id": "$APIGEE_CLIENT_ID",
-                            "client_secret": "$APIGEE_SECRET_ID",
-                            "grant_type": "client_credentials"
-                        }' | jq '.access_token' --raw-output """).trim()
-                        sh """
-                            set +x
-                            RESULT=${env.AUTH_KEY}
-                            if [[ "\$RESULT" == "null" ]]; then
-                                echo "Error on Authentication"
-                                exit 1;
-                            fi
-                            set -x
-                        """
-                    }
-            echo env.AUTH_KEY
-                }
-            }
-        }
-        stage('Checkout API Proxy') {
-            steps {
-                 sh """
-                    echo "checkout API"
-                 """
-                }
-            }
+        //     script {
+        //                 env.AUTH_KEY = sh(returnStdout: true, script: """curl --location -g --request POST '${env.URL_ENV}/apip/auth/v2/token' \\
+        //                 --header 'Content-Type: application/json' \\
+        //                 --data '{
+        //                     "client_id": "$APIGEE_CLIENT_ID",
+        //                     "client_secret": "$APIGEE_SECRET_ID",
+        //                     "grant_type": "client_credentials"
+        //                 }' | jq '.access_token' --raw-output """).trim()
+        //                 sh """
+        //                     set +x
+        //                     RESULT=${env.AUTH_KEY}
+        //                     if [[ "\$RESULT" == "null" ]]; then
+        //                         echo "Error on Authentication"
+        //                         exit 1;
+        //                     fi
+        //                     set -x
+        //                 """
+        //             }
+        //     echo env.AUTH_KEY
+        //         }
+        //     }
+        // }
+        // stage('Checkout API Proxy') {
+        //     steps {
+        //          sh """
+        //             echo "checkout API"
+        //          """
+        //         }
+        //     }
         
         stage('Deploy Target Servers') {
             when {
@@ -118,9 +120,12 @@ pipeline {
         }
         stage('Build and Package API Proxy') {
             steps {
-                dir('api') {
+                dir("apiProxy/${apiName}") {
                     sh """                        
                        echo "Build stage"
+                       pwd 
+                       ls -lrt 
+                       zip -r ${apiName}.zip apiproxy
                     """
                 }
             }

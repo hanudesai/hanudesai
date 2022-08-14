@@ -1,3 +1,5 @@
+@Library("shared-lib") _
+
 pipeline {
     agent any
     parameters {
@@ -17,31 +19,8 @@ pipeline {
         API_USER='user@email.com' // User email for api-user when call the cURL command.
     }
     stages {
-        stage('Checking Input Parameters') {
-            steps {
-                
-                sh """
-                    if [[ "\$API" == "--PLEASE SELECT AN API--" ]]; then
-                        exit 1;
-                    fi
+       
 
-                    if [[ "\$DESTINATION" == "--PLEASE SELECT AN ENV--" ]]; then
-                        exit 1;
-                    fi
-                """
-            }
-        }
-        // stage('Test connectivity') {
-        //     when {
-        //         expression { return params.dry_run == true }
-        //     }
-        //     steps{
-        //         sh """
-        //             echo "curl https://apigee_Url"
-
-        //         """
-        //     }
-        // }
         stage('Parse Environment Vars') {
             steps {
                 script {
@@ -114,6 +93,8 @@ pipeline {
             steps {
                 sh """
                     echo "Running GET Request for TS"
+                    deployApigeeProxy.getTargetServer( ${env.ORGANIZATION} ,  ${env.APIGEE_ENV} ,  "test-htttpbin" ,  ${auth})
+                    deployApigeeProxy.createTargetServer( ${env.ORGANIZATION} ,  ${env.APIGEE_ENV} ,  "test-htttpbin" ,  ${auth})
                     
                 """
             }

@@ -95,7 +95,7 @@ pipeline {
                     echo "Deploy Proxy to DEV ENV" 
                 """
                 script{
-                    ( targetConfig.org ,  targetConfig.env ,  targetConfig.targetServer ,  targetConfig.auth )
+                   
                     deployApigeeProxy.deployTargetServer(org:"${env.ORGANIZATION}" ,  env:"${env.APIGEE_ENV}" ,  targetServer: "test-htttpbin" ,  auth: "${auth}" , targetOverride: "${params.override_target_server}")
                     // deployApigeeProxy.getTargetServer("${env.ORGANIZATION}" ,  "${env.APIGEE_ENV}" ,  "test-htttpbin" ,  "${auth}" )
                     // deployApigeeProxy.createTargetServer( "${env.ORGANIZATION}" ,  "${env.APIGEE_ENV}" ,  "test-htttpbin" ,  "${auth}" )

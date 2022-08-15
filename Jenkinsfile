@@ -6,7 +6,7 @@ pipeline {
         string defaultValue: 'token', name: 'auth', description: 'google auth'
         string defaultValue: 'apiName', name: 'apiName', description: 'ApiProxy Name'
         // choice choices: ['--PLEASE SELECT AN API--','ECCHUB_App_Token_v1','ECCHUB_CIAM_UserSession_v1'], name: 'API', description: 'Desired API to deploy/update on apigee.'
-        choice choices: ['--PLEASE SELECT AN ENV--','DEV', 'UAT'], name: 'DESTINATION', description: 'Destination environment to deploy the apiproxy.'
+        choice choices: ['--PLEASE SELECT AN ENV--','DEV', 'UAT', 'PROD'], name: 'DESTINATION', description: 'Destination environment to deploy the apiproxy.'
         booleanParam defaultValue: false, name: 'override_target_server', description: 'override existing Target Servers Deployment'
         booleanParam defaultValue: false, name: 'import_proxy', description: 'Enables the API Proxy Import the code into apigee'
         booleanParam defaultValue: false, name: 'deploy_product', description: 'Enables Product Deployment'
@@ -47,52 +47,15 @@ pipeline {
                 echo env.URL_ENV
             }
         }
-        // stage('Authenticate') {
-        //     when {
-        //         expression { return params.dry_run == false }
-        //     }
-        //     steps {
-        //         withCredentials([
-        //             string(credentialsId: env.CREDENTIALS_APIGEE_SECRET_ID, variable: 'APIGEE_SECRET_ID'), 
-        //             string(credentialsId: env.CREDENTIALS_APIGEE_CLIENT_ID, variable: 'APIGEE_CLIENT_ID')]) {
+     
         
-        //     script {
-        //                 env.AUTH_KEY = sh(returnStdout: true, script: """curl --location -g --request POST '${env.URL_ENV}/apip/auth/v2/token' \\
-        //                 --header 'Content-Type: application/json' \\
-        //                 --data '{
-        //                     "client_id": "$APIGEE_CLIENT_ID",
-        //                     "client_secret": "$APIGEE_SECRET_ID",
-        //                     "grant_type": "client_credentials"
-        //                 }' | jq '.access_token' --raw-output """).trim()
-        //                 sh """
-        //                     set +x
-        //                     RESULT=${env.AUTH_KEY}
-        //                     if [[ "\$RESULT" == "null" ]]; then
-        //                         echo "Error on Authentication"
-        //                         exit 1;
-        //                     fi
-        //                     set -x
-        //                 """
-        //             }
-        //     echo env.AUTH_KEY
-        //         }
-        //     }
-        // }
-        // stage('Checkout API Proxy') {
-        //     steps {
-        //          sh """
-        //             echo "checkout API"
-        //          """
-        //         }
-        //     }
-        
-        stage('Deploy to DEV ENV') {
+        stage('Deploy API to DEV ENV') {
             when {
                 expression { return params.DESTINATION == "DEV" }
             }
             steps {
                 sh """
-                    echo "Deploy Proxy to DEV ENV" 
+                    echo "Deploy TargetServer  to DEV ENV" 
                 """
                 script{
                    
@@ -100,10 +63,37 @@ pipeline {
                     
                 
                 }
+                dir("apiProxy/${apiName}") {
+                    sh """                        
+                       echo "Build stage"
+                       pwd 
+                       ls -lrt 
+                       zip -r ${apiName}.zip apiproxy
+                    """
+                    script {
+                        echo "deploy API Proxy"
+                        
+                        
+                    }
+                }
+                
             }
         }
-        stage('Build and Deploy API Proxy') {
+
+                stage('Deploy API to UAT ENV') {
+            when {
+                expression { return params.DESTINATION == "UAT" }
+            }
             steps {
+                sh """
+                    echo "Deploy TargetServer  to DEV ENV" 
+                """
+                script{
+                   
+                    deployApigeeProxy.deployTargetServer(org:"${env.ORGANIZATION}" ,  env:"${env.APIGEE_ENV}" ,  targetServer: "test-htttpbin" ,  auth: "${auth}" , targetOverride: "${params.override_target_server}")
+                    
+                
+                }
                 dir("apiProxy/${apiName}") {
                     sh """                        
                        echo "Build stage"
@@ -116,54 +106,41 @@ pipeline {
                         
                     }
                 }
+                
             }
         }
-        // stage('Import Proxy') {
-        //     when {
-        //         expression { return params.dry_run == false && params.import_proxy == true }
-
-        //     }
-        //     steps {
-        //         dir("apiProxy/${apiName}"){
-        //         sh """
-        //            echo "Import proxy"
-
-        //         """
-        //         }
-        //     }
-        // }
-        // stage('Deploy API Proxy') {
-        //     when {
-        //         expression { return false }
-        //     }
-        //     steps {
-        //         sh """
-        //            echo "Deploy Proxy"
-        //         """ 
-        //     }
-        // }
-        stage('Deploy Product') {
+    
+                    stage('Deploy API to PROD ENV') {
             when {
-                expression { return params.dry_run == false && params.deploy_product == true}
+                expression { return params.DESTINATION == "PROD" }
             }
             steps {
                 sh """
-                    echo "Deploy Product"           
+                    echo "Deploy TargetServer  to PROD ENV" 
                 """
-            }
-        }
-        stage('Deploy Custom Attributes') {
-            when {
-                expression { return params.dry_run == false && params.deploy_custom_attributes == true}
-            }
-            steps {
-                script {
-                    sh """
-                        echo "Deploy Custom Attribute"
-                    """
+                script{
+                   
+                    deployApigeeProxy.deployTargetServer(org:"${env.ORGANIZATION}" ,  env:"${env.APIGEE_ENV}" ,  targetServer: "test-htttpbin" ,  auth: "${auth}" , targetOverride: "${params.override_target_server}")
+                    
+                
                 }
+                dir("apiProxy/${apiName}") {
+                    sh """                        
+                       echo "Build stage"
+                       pwd 
+                       ls -lrt 
+                       zip -r ${apiName}.zip apiproxy
+                    """
+                    script {
+                        echo "deploy API Proxy"
+                        
+                    }
+                }
+                
             }
         }
+       
+
     }
 }
 

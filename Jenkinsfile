@@ -72,7 +72,7 @@ pipeline {
                     """
                     script {
                         echo "deploy API Proxy"
-
+                        deployApigeeProxy.deployApiProxy("${auth}" , "${env.ORGANIZATION}" , "$apiName")
                         
                     }
                 }

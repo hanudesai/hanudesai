@@ -7,7 +7,7 @@ pipeline {
         string defaultValue: 'apiName', name: 'apiName', description: 'ApiProxy Name'
         // choice choices: ['--PLEASE SELECT AN API--','ECCHUB_App_Token_v1','ECCHUB_CIAM_UserSession_v1'], name: 'API', description: 'Desired API to deploy/update on apigee.'
         choice choices: ['--PLEASE SELECT AN ENV--','DEV', 'UAT'], name: 'DESTINATION', description: 'Destination environment to deploy the apiproxy.'
-        booleanParam defaultValue: false, name: 'deploy_target_server', description: 'Enables Target Servers Deployment'
+        booleanParam defaultValue: false, name: 'override_target_server', description: 'override existing Target Servers Deployment'
         booleanParam defaultValue: false, name: 'import_proxy', description: 'Enables the API Proxy Import the code into apigee'
         booleanParam defaultValue: false, name: 'deploy_product', description: 'Enables Product Deployment'
         booleanParam defaultValue: false, name: 'deploy_custom_attributes', description: 'Enables Custom Attributes Deployment'
@@ -86,17 +86,20 @@ pipeline {
         //         }
         //     }
         
-        stage('Deploy Target Servers') {
+        stage('Deploy to DEV ENV') {
             when {
-                expression { return params.dry_run == false && params.deploy_target_server == true}
+                expression { return params.DESTINATION == DEV }
             }
             steps {
                 sh """
-                    echo "Running GET Request for TS" 
+                    echo "Deploy Proxy to DEV ENV" 
                 """
                 script{
-                    deployApigeeProxy.createTargetServer( "${env.ORGANIZATION}" ,  "${env.APIGEE_ENV}" ,  "test-htttpbin" ,  "${auth}" )
-                    deployApigeeProxy.getTargetServer("${env.ORGANIZATION}" ,  "${env.APIGEE_ENV}" ,  "test-htttpbin" ,  "${auth}" )
+                    ( targetConfig.org ,  targetConfig.env ,  targetConfig.targetServer ,  targetConfig.auth )
+                    deployApigeeProxy.deployTargetServer(org:"${env.ORGANIZATION}" ,  env:"${env.APIGEE_ENV}" ,  targetServer: "test-htttpbin" ,  auth: "${auth}" , targetOverride: "${params.override_target_server}")
+                    // deployApigeeProxy.getTargetServer("${env.ORGANIZATION}" ,  "${env.APIGEE_ENV}" ,  "test-htttpbin" ,  "${auth}" )
+                    // deployApigeeProxy.createTargetServer( "${env.ORGANIZATION}" ,  "${env.APIGEE_ENV}" ,  "test-htttpbin" ,  "${auth}" )
+                    
                 
                 }
             }

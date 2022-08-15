@@ -88,7 +88,7 @@ pipeline {
         
         stage('Deploy to DEV ENV') {
             when {
-                expression { return params.DESTINATION == DEV }
+                expression { return params.DESTINATION == "DEV" }
             }
             steps {
                 sh """

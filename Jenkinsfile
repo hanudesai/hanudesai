@@ -97,14 +97,12 @@ pipeline {
                 script{
                    
                     deployApigeeProxy.deployTargetServer(org:"${env.ORGANIZATION}" ,  env:"${env.APIGEE_ENV}" ,  targetServer: "test-htttpbin" ,  auth: "${auth}" , targetOverride: "${params.override_target_server}")
-                    // deployApigeeProxy.getTargetServer("${env.ORGANIZATION}" ,  "${env.APIGEE_ENV}" ,  "test-htttpbin" ,  "${auth}" )
-                    // deployApigeeProxy.createTargetServer( "${env.ORGANIZATION}" ,  "${env.APIGEE_ENV}" ,  "test-htttpbin" ,  "${auth}" )
                     
                 
                 }
             }
         }
-        stage('Build and Package API Proxy') {
+        stage('Build and Deploy API Proxy') {
             steps {
                 dir("apiProxy/${apiName}") {
                     sh """                        
@@ -113,29 +111,37 @@ pipeline {
                        ls -lrt 
                        zip -r ${apiName}.zip apiproxy
                     """
+                    script {
+                        echo "deploy API Proxy"
+                        
+                    }
                 }
             }
         }
-        stage('Import Proxy') {
-            when {
-                expression { return params.dry_run == false && params.import_proxy == true }
-            }
-            steps {
-                sh """
-                   echo "Import proxy"
-                """
-            }
-        }
-        stage('Deploy API Proxy') {
-            when {
-                expression { return false }
-            }
-            steps {
-                sh """
-                   echo "Deploy Proxy"
-                """ 
-            }
-        }
+        // stage('Import Proxy') {
+        //     when {
+        //         expression { return params.dry_run == false && params.import_proxy == true }
+
+        //     }
+        //     steps {
+        //         dir("apiProxy/${apiName}"){
+        //         sh """
+        //            echo "Import proxy"
+
+        //         """
+        //         }
+        //     }
+        // }
+        // stage('Deploy API Proxy') {
+        //     when {
+        //         expression { return false }
+        //     }
+        //     steps {
+        //         sh """
+        //            echo "Deploy Proxy"
+        //         """ 
+        //     }
+        // }
         stage('Deploy Product') {
             when {
                 expression { return params.dry_run == false && params.deploy_product == true}

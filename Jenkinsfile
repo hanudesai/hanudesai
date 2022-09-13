@@ -63,18 +63,23 @@ pipeline {
                     
                 
                 // }
-                dir("apiProxy/${apiName}") {
-                    sh """                        
-                       echo "Build stage"
-                       pwd 
-                       ls -lrt 
-                       zip -r ${apiName}.zip apiproxy
-                    """
-                    script {
-                        echo "deploy API Proxy"
-                        deployApigeeProxy.deployApiProxy("${auth}" , "${env.ORGANIZATION}" , "${apiName}")
+                // dir("apiProxy/${apiName}") {
+                //     sh """                        
+                //        echo "Build stage"
+                //        pwd 
+                //        ls -lrt 
+                //        zip -r ${apiName}.zip apiproxy
+                //     """
+                //     script {
+                //         echo "deploy API Proxy"
+                //         deployApigeeProxy.deployApiProxy("${auth}" , "${env.ORGANIZATION}" , "${apiName}")
                         
-                    }
+                //     }
+                // }
+
+                 script{
+                   
+                    deployApigeeProduct.deployProduct(org: "${org}" , env: "${env}" , apiName: "${apiName}" , auth: "${auth}")
                 }
                 
             }
@@ -101,11 +106,11 @@ pipeline {
                        ls -lrt 
                        zip -r ${apiName}.zip apiproxy
                     """
-                    // script {
-                    //     echo "deploy API Proxy"
-                    //     deployApigeeProxy.deployApiProxy("${auth}" , "${env.ORGANIZATION}" , "$apiName")
+                    script {
+                        echo "deploy API Proxy"
+                        deployApigeeProxy.deployApiProxy("${auth}" , "${env.ORGANIZATION}" , "$apiName")
                         
-                    // }
+                    }
                 }
 
                 script{

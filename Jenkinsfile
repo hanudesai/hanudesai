@@ -57,12 +57,12 @@ pipeline {
                 sh """
                     echo "Deploy TargetServer  to DEV ENV" 
                 """
-                script{
+                // script{
                    
-                    deployApigeeProxy.deployTargetServer(org:"${env.ORGANIZATION}" ,  env:"${env.APIGEE_ENV}" ,  targetServer: "test-htttpbin" ,  auth: "${auth}" , targetOverride: "${params.override_target_server}")
+                //     deployApigeeProxy.deployTargetServer(org:"${env.ORGANIZATION}" ,  env:"${env.APIGEE_ENV}" ,  targetServer: "test-htttpbin" ,  auth: "${auth}" , targetOverride: "${params.override_target_server}")
                     
                 
-                }
+                // }
                 dir("apiProxy/${apiName}") {
                     sh """                        
                        echo "Build stage"
@@ -72,7 +72,7 @@ pipeline {
                     """
                     script {
                         echo "deploy API Proxy"
-                        deployApigeeProxy.deployApiProxy("${auth}" , "${env.ORGANIZATION}" , "$apiName")
+                        deployApigeeProxy.deployApiProxy("${auth}" , "${env.ORGANIZATION}" , "${apiName}")
                         
                     }
                 }
@@ -101,11 +101,16 @@ pipeline {
                        ls -lrt 
                        zip -r ${apiName}.zip apiproxy
                     """
-                    script {
-                        echo "deploy API Proxy"
-                        deployApigeeProxy.deployApiProxy("${auth}" , "${env.ORGANIZATION}" , "$apiName")
+                    // script {
+                    //     echo "deploy API Proxy"
+                    //     deployApigeeProxy.deployApiProxy("${auth}" , "${env.ORGANIZATION}" , "$apiName")
                         
-                    }
+                    // }
+                }
+
+                script{
+                   
+                    deployApigeeProduct.deployProduct(org: "${org}" , env: "${env}" , apiName: "${apiName}" , auth: "${auth}")
                 }
                 
             }

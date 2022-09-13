@@ -80,7 +80,7 @@ pipeline {
 
                  script{
                    
-                    deployApigeeProduct.deployProduct(org: "${env.ORGANIZATION}" , env: "${env}" , apiName: "${apiName}" , auth: "${auth}")
+                    deployApigeeProduct.deployProducts(org: "${env.ORGANIZATION}" , env: "${env}" , apiName: "${apiName}" , auth: "${auth}")
                 }
                 
             }

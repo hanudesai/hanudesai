@@ -5,6 +5,7 @@ pipeline {
     parameters {
         string defaultValue: 'token', name: 'auth', description: 'google auth'
         string defaultValue: 'apiName', name: 'apiName', description: 'ApiProxy Name'
+
         // choice choices: ['--PLEASE SELECT AN API--','ECCHUB_App_Token_v1','ECCHUB_CIAM_UserSession_v1'], name: 'API', description: 'Desired API to deploy/update on apigee.'
         choice choices: ['--PLEASE SELECT AN ENV--','DEV', 'UAT', 'PROD'], name: 'DESTINATION', description: 'Destination environment to deploy the apiproxy.'
         booleanParam defaultValue: false, name: 'override_target_server', description: 'override existing Target Servers Deployment'
@@ -79,7 +80,7 @@ pipeline {
 
                  script{
                    
-                    deployApigeeProduct.deployProduct(org: "${org}" , env: "${env}" , apiName: "${apiName}" , auth: "${auth}")
+                    deployApigeeProduct.deployProduct(org: "${env.ORGANIZATION}" , env: "${env}" , apiName: "${apiName}" , auth: "${auth}")
                 }
                 
             }

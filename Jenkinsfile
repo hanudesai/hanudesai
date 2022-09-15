@@ -1,7 +1,7 @@
 @Library("shared-lib") _
 import groovy.json.JsonSlurper
 pipeline {
-    agent { label 'vm-edaap-api-gateway-01'}
+    agent any
    /*
     parameters {
         string defaultValue: 'token', name: 'auth', description: 'google auth'

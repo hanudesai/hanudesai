@@ -77,7 +77,7 @@ pipeline {
                                 string(defaultValue: 'token', name: 'auth', description: 'google auth'),
                                 string( defaultValue: 'apiName', name: 'apiName', description: 'ApiProxy Name'),
       //  choice choices: ['--PLEASE SELECT AN ENV--','DEV', 'UAT', 'PROD'], name: 'DESTINATION', description: 'Destination environment to deploy the apiproxy.'
-                                booleanParam (defaultValue: false, name: 'override_target_server', description: 'override existing Target Servers Deployment'),
+                                booleanParam (defaultValue: false, name: 'target_server', description: 'Target Servers Deployment'),
                                 booleanParam (defaultValue: false, name: 'deploy_proxy', description: 'Enables the API Proxy Import the code into apigee'),
                                 booleanParam (defaultValue: false, name: 'deploy_product', description: 'Enables Product Deployment')
                             ])
@@ -114,13 +114,34 @@ pipeline {
             when {
                 expression { return params.Env == "Apigee-Dev" }
             }
-            steps {
+             steps {
+               
+               
+                sh 'gcloud --version'
+                withCredentials([file(credentialsId: 'gc_creds', variable: 'gc_creds')]) {
+                    sh ('gcloud auth activate-service-account apigee-deploy@cps-apg-hybrid.iam.gserviceaccount.com --key-file=$gc_creds')
+                    
+                   
+}
+script {
+                   env.auth_token = sh (
+                       script: 'gcloud auth print-access-token',
+                       returnStdout: true ).trim()
+                   echo "${env.auth_token}"
+               }
+               println "print auth token"
+                println " auth token ${env.auth_token}"
+                echo " token is ${env.auth_token}"
+              
+            
+
+
                 sh """
                     echo "Deploy TargetServer  to DEV ENV" 
                 """
                 script{
-                   if (override_target_server == "true") {
-                    deployApigeeProxy.deployTargetServer(org:"${env.ORGANIZATION}" ,  env:"${env.APIGEE_ENV}" ,  targetServer: "test-htttpbin" ,  auth: "${auth}" , targetOverride: "${params.override_target_server}")
+                   if (target_server == "true") {
+                    deployApigeeProxy.deployTargetServer(org:"${env.ORGANIZATION}" ,  env:"${env.APIGEE_ENV}" ,  targetServer: "test-htttpbin" ,  auth: "${env.auth_token}" , targetOverride: "${params.override_target_server}")
                     }
                 } 
                 dir("API/${apiName}") {
@@ -136,13 +157,13 @@ pipeline {
                         """
                             echo "deploy API Proxy"
                             def zipFile = "${apiName}.zip"
-                            def (val_response , val_null) = apigeePost.post("${auth}" , "${env.ORGANIZATION}" , "$apiName" , "validate" , "${zipFile}" )
+                            def (val_response , val_null) = apigeePost.post("${env.auth_token}" , "${env.ORGANIZATION}" , "$apiName" , "validate" , "${zipFile}" )
                             println val_response
                             if(val_response.status == 200 )  {
-                                def ( import_response , new_api_revision )  = apigeePost.post("${auth}" , "${env.ORGANIZATION}" , "$apiName" , "import" , "${zipFile}" )
+                                def ( import_response , new_api_revision )  = apigeePost.post("${env.auth_token}" , "${env.ORGANIZATION}" , "$apiName" , "import" , "${zipFile}" )
                                 println import_response.status 
                                 println new_api_revision
-                                def deploy_api = apigeePost.updateRevision( "${auth}" , "${env.ORGANIZATION}" , "$apiName" , "$new_api_revision" , "$env.APIGEE_ENV" )
+                                def deploy_api = apigeePost.updateRevision( "${env.auth_token}" , "${env.ORGANIZATION}" , "$apiName" , "$new_api_revision" , "$env.APIGEE_ENV" )
                             }
                         }
                     }
@@ -152,7 +173,7 @@ pipeline {
                      println  deploy_product
                     if (deploy_product == "true" ) {
                          echo "Deploy Product"
-                        deployApigeeProducts.deployProducts(org:"${env.ORGANIZATION}"  ,  auth: "${auth}" , apiName : "${apiName}" )
+                        deployApigeeProducts.deployProducts(org:"${env.ORGANIZATION}"  ,  auth: "${env.auth_token}" , apiName : "${apiName}" )
                     }
                 }
             }
